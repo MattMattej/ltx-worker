@@ -4,5 +4,8 @@ RUN pip install --no-cache-dir runpod requests
 
 COPY handler.py /handler.py
 
+RUN ln -sf "$(command -v python3 || command -v python)" /usr/local/bin/pyrun && \
+    /usr/local/bin/pyrun --version
+
 ENTRYPOINT []
-CMD ["bash", "-lc", "python -u /handler.py"]
+CMD ["/usr/local/bin/pyrun", "-u", "/handler.py"]
