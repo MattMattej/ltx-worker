@@ -1,9 +1,4 @@
-"""Handler serverless de RunPod para LTX-2.3 sobre la imagen antilopax.
-
-Arranca ComfyUI (que ya trae todos los nodos LTX-2.3), usa los modelos del
-Network Volume (/runpod-volume/models, para no re-bajar 45GB en cada cold start),
-recibe un workflow JSON, lo ejecuta y devuelve el MP4 en base64.
-"""
+"""Handler serverless de RunPod para LTX-2.3 sobre la imagen antilopax."""
 import base64
 import glob
 import os
@@ -18,11 +13,9 @@ URL = "http://127.0.0.1:8188"
 
 
 def _link_volume_models() -> None:
-    """Symlinkea los modelos del volumen a la carpeta models de ComfyUI, así usa
-    los del volumen y NO intenta descargarlos (cold start rápido)."""
     vol = "/runpod-volume/models"
     if not os.path.isdir(vol):
-        print("WARN: no existe /runpod-volume/models — ¿está adjunto el volumen?", flush=True)
+        print("WARN: no existe /runpod-volume/models", flush=True)
         return
     dst = os.path.join(COMFY, "models")
     for sub in os.listdir(vol):
@@ -58,13 +51,12 @@ def _wait_ready(timeout: int = 600) -> bool:
     return False
 
 
-# --- arranque (una vez por worker) ---
 _link_volume_models()
 _proc = _start_comfy()
 if not _wait_ready():
-    print("ERROR: ComfyUI no arrancó a tiempo", flush=True)
+    print("ERROR: ComfyUI no arranco a tiempo", flush=True)
 
-import runpod  # noqa: E402  (después de arrancar Comfy)
+import runpod  # noqa: E402
 
 
 def handler(job):
@@ -77,10 +69,9 @@ def handler(job):
         return {"error": f"/prompt {r.status_code}: {r.text[:500]}"}
     pid = r.json()["prompt_id"]
 
-    # Marca temporal para identificar el video nuevo (evita devolver uno viejo).
     t0 = time.time()
     hist = {}
-    for _ in range(900):  # hasta 30 min
+    for _ in range(900):
         hist = requests.get(f"{URL}/history/{pid}").json()
         entry = hist.get(pid)
         if entry and (entry.get("status", {}).get("completed") or entry.get("outputs")):
@@ -94,7 +85,7 @@ def handler(job):
     if not files:
         files = glob.glob(f"{COMFY}/output/**/*.mp4", recursive=True)
     if not files:
-        return {"error": "no se generó video", "history": hist.get(pid, {})}
+        return {"error": "no se genero video", "history": hist.get(pid, {})}
     newest = max(files, key=os.path.getmtime)
     with open(newest, "rb") as f:
         return {"video_base64": base64.b64encode(f.read()).decode()}
