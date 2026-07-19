@@ -1,9 +1,7 @@
-FROM runpod/worker-comfyui:5.8.6-base
+FROM docker.io/antilopax/ltx23:v14
 
-RUN cd /comfyui/custom_nodes && \
-    git clone https://github.com/city96/ComfyUI-GGUF && \
-    git clone https://github.com/Lightricks/ComfyUI-LTXVideo && \
-    pip install -r ComfyUI-GGUF/requirements.txt && \
-    pip install -r ComfyUI-LTXVideo/requirements.txt
+RUN pip install --no-cache-dir runpod requests
 
-COPY extra_model_paths.yaml /comfyui/extra_model_paths.yaml
+COPY handler.py /handler.py
+
+CMD ["python", "-u", "/handler.py"]
