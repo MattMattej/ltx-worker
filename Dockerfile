@@ -17,3 +17,4 @@ COPY handler.py /handler.py
 
 ENTRYPOINT []
 CMD ["/usr/local/bin/pyrun", "-u", "/handler.py"]
+
